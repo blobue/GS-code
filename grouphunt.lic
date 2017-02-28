@@ -1,0 +1,285 @@
+=begin
+	# Author: blobue
+	# Categories: utility
+	# Tags: utility
+	# Version: 1.0
+This script runs startup scripts and sends fin to hunt
+=end
+
+KiramonBoundary = 2262 
+KiramonStart = 2263
+Home = 14627
+VolcanoBoundary = [ 2140, 12764 ]
+VolcanoStart = 2154
+ThanotophBoundary = [ 3574, 3578, 3789, 3838]
+ThanotophStart = 3576
+
+$DEBUG = 1
+
+go_home = proc{
+	start_script("go2", [ starting_room_id, '_disable_confirm_' ])
+	wait_while { running?("go2")}
+}
+
+#get dressed
+start_script( "hunt-prep" )
+wait_while { running?("hunt-prep") }
+sleep 1
+
+#setup wander
+start_script "wander", [ "clear" ]
+wait_while { running?("wander") }
+
+ThanotophBoundary.each { |room|
+  start_script "wander", [ "add", "#{room}" ]
+  wait_while { running?("wander") }
+}
+#pause_script
+
+unique_send_to_script("crosscharcom", "rullas exec start_script\(\"rullas-prep\"\)" )
+if (matchwait 60, "Rullas whispers\, \"Meet you there\.\"" ) == false then
+    echo "Rullas unable to prepare! exiting"
+    exit
+end
+
+# pause_script if $DEBUG == 1
+
+def notGrouped?()
+  3.times {
+     fput "group"
+     result = clear
+     result.each { |line|
+       if line =~ /Rullas is following you./ then
+          return :grouped
+       end
+     }
+     echo "Rullas is not following, try to reestablish group" if $DEBUG == 1
+     sleep 1
+     multifput "hold Rullas", "pull Rullas"
+     sleep 1
+     nil
+  }
+  # bad if we get here. run home and exit
+  echo "running home, Rullas gone!"
+  start_script("go2", [ '#{Home}' ] )
+  wait_while{ running?("go2") }
+  sleep 1
+  echo "exiting grouphunt"
+  exit
+end
+
+# check for grouping, exit if Rullas is not up and we don't have crosschar com
+if running?("crosscharcom") == false ||
+   checkpcs("Rullas") == nil ||
+   notGrouped? == nil then
+     echo "either comms is down or Rullas is not present and grouped, exiting"
+     exit
+end
+
+sleep 5
+start_script "go2", [ "#{ThanotophStart}" ]
+wait_while{ running?("go2") }
+sleep 3
+
+if checkpcs("Rullas") then
+  fput "hold Rullas"
+end
+                      
+# pause_script
+
+echo "heading out to Thanotoph hunting area"
+
+#begin hunt loop
+
+echo "beginning main hunting loop" if $DEBUG == 1
+
+def keephunting?
+      if checkpoison then return false end
+      if checkdisease then return false end
+      if !checkhealth(120) then return false end
+      if Wounds.neck > 1 then return false end
+      if Wounds.nerves > 0 then return false end
+      if Wounds.head > 1 then return false end
+      if percentmind > 95 then return false end
+      if !checkmana(25) then return false end
+      
+      # are we alive
+      if checkdead then
+         # kill all scripts and log out
+         echo "dead somehow, logging out"
+         sleep 10
+         fput "exit"
+      end
+
+      return true
+end
+
+def lullabye (id)
+   loop {
+       if checkmana(20) then
+           multifput "prep 1005", "sing at ##{id}"
+	   sleep 1
+	   waitcastrt?
+       end
+
+       result = :again
+       cast_result = clear
+       # echo "checking to see if 1005 worked ", cast_result
+       cast_result.each { |game_string|
+           if game_string =~ /^\[Spell Hindrance for/ then
+              echo "cast failure, do it again"
+	      result = :again
+	      break
+	   else
+	      result = :done
+	   end
+       }
+       # echo "result is #{result}"
+       if result == :done then break end
+   }
+   return
+end
+
+def travellers ()
+  loop {
+       if checkmana(20) then
+           multifput "incant 1020"
+	   sleep 1
+	   waitcastrt?
+       end
+
+       result = :again
+       cast_result = clear
+       # echo "checking to see if 1005 worked ", cast_result
+       cast_result.each { |game_string|
+           if game_string =~ /^\[Spell Hindrance for/ then
+              echo "cast failure, do it again"
+	      result = :again
+	      break
+	   else
+	      result = :done
+	   end
+       }
+       # echo "result is #{result}"
+       if result == :done then break end
+   }
+   return
+end
+
+def tooScary?
+  # count up mobs that are scary and return true if we should try another room
+  bad_count = 0
+
+  scary = GameObj.npcs.find_all { |mob| mob.name =~ /giant/  }
+  
+  echo "counting giants, we found ", scary.size if $DEBUG == 1
+  return true if scary.size > 1
+
+  return false
+
+end
+
+restart = false
+
+while keephunting? do
+      #if VERBOSITY != nil then echo "iterating through main loop" end
+
+      #turn stamina into mana if we can
+      if ( !checkmana(50) && checkstamina(70) ) then
+      	 fput "sigil of power"
+      end
+      
+      # let's find something to kill unless Rullas said try again
+      if !restart then
+        if script.vars[1] != nil then
+          start_script( "wander", [ "#{script.vars[1]}" ] )
+        else
+          echo "default wander in gkill" if $DEBUG == 1
+          start_script( "wander" )
+        end
+      end
+
+      wait_while { running?("wander") }
+
+      #how many baddies, more than 1 and we keep going
+      if GameObj.npcs.size > 1 || tooScary?
+         restart = false
+      	 next
+      else
+         # gkill logic here
+         # make a target list and start killing
+         # time to kill
+         if checkmana(30) then
+           fput "incant 410"
+           sleep 0.2
+         end
+
+         echo "get killin!"
+         start_script "gkill"
+         
+         wait_while{ running?("gkill") }
+         sleep 0.1
+         #
+	 # after killing logic here
+         # have Rullas loot and communicate back any conditions
+         # Rullas should be able to send us home if he's in trouble too
+	 #
+         fput "stanc def"
+	 start_script "rullas-loot"
+         next_step = matchtimeout 20, "Rullas whispers\, \"Done looting\.\"", "Rullas whispers\, \"Run home\.\"", "Rullas whispers\, \"Still fighting\.\""
+         echo "next step is ", next_step if $DEBUG == 1
+         
+         if next_step == false then
+           echo "looting synchronization broken! run home"
+           break
+         elsif next_step =~ /Done looting/ then
+         # do nothing and fall through
+           echo "looting done, keep hunting" if $DEBUG == 1
+         elsif next_step =~ /Run home/ then
+           echo "Rullas said to run home" if $DEBUG == 1
+           break
+         elsif next_step =~ /Still fighting/ then
+           # we need to keep fighting or tell Rullas to stop
+           echo "Rullas still swinging, join in"
+           restart = true
+           redo
+         end
+         #
+         # are we still grouped in the same room? that matters
+         #
+         if checkpcs("Rullas") == nil ||
+            notGrouped? == nil then
+           echo "Rullas gone, or group messed up, fix that!"
+           sleep 1
+           echo "hopefully things got fixed"
+           # pause_script
+         end
+         
+         #pause_script
+      end
+      restart = false
+      
+end
+
+# check to see if we are dead, yeah it happens, kill off scripts and logout
+
+travelers()
+waitcastrt?
+sleep 1
+
+echo "just sung in, sickness or thirst should be handled"
+pause_script
+
+unique_send_to_script("crosscharcom", "rullas exec start_script\(\"rullas-end\"\)" )
+
+start_script( "hunt-end" )
+wait_while { running?("hunt-end") }
+
+#should heal up if necessary
+
+echo "grouphunt ending"
+
+sleep 1
+
+
+	

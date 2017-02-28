@@ -1,0 +1,43 @@
+=begin
+	# Author: blobue
+	# Categories: utility
+	# Tags: utility
+	# Version: 1.0
+This script dresses Fin and starts 1019 and checks for any bad conditions
+=end
+
+go_home = proc{
+	start_script("go2", [ starting_room_id, '_disable_confirm_' ])
+	wait_while { running?("go2")}
+}
+
+echo "Preparing Fingrimbal to hunt"
+
+fput "stow all"
+
+start_script("fin-dress")
+wait_while { running?("fin-dress") }
+
+fput "stop singing 1011"
+waitcastrt?
+sleep 1
+
+fput "incant 1019"
+waitcastrt?
+
+start_script("iSigils")
+sleep 1
+start_script("stand")
+sleep 1
+
+if ( checkpoison || checkdisease )
+   echo "Fin not ready to go"
+end
+
+fput "get naginata from my pack"
+
+
+
+
+
+

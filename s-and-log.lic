@@ -1,0 +1,7 @@
+#
+# s-and-log.lic
+#
+# wait till head empty then log
+#
+wait_while{ percentmind > 0 }
+fput "exit"

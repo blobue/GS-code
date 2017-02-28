@@ -1,0 +1,131 @@
+=begin
+Group Kill
+=end
+
+$npc_order        = ['giant', 'troll']
+$group            = []
+$ignore_creatures = /child|nest|dobrem|cat/
+$DEBUG = 1
+
+def next_npc()
+    $critter = nil
+
+    if GameObj.npcs.size > 2 then
+      echo "Too many mobs!, stop killing and run" if $DEBUG == 1
+      exit
+    end
+    
+    $npc_order.each do |name|
+      $critter = GameObj.npcs.find{ |npc| npc.name =~ /#{name}/i and npc.status !~ /dead|gone/i and not npc.name =~ $ignore_creatures}
+      # echo "next npc is ", $critter.inspect if $DEBUG == 1
+      return $critter unless $critter.nil?
+    end
+    GameObj.npcs.each { |npc|
+      if (npc.status !~ /dead|gone/i) && !(npc.name =~ $ignore_creatures) then
+        # echo "returning npc ", npc.inspect
+        return npc
+      end
+    }
+    nil
+end
+
+def keephunting?
+      if checkpoison then return false end
+      if checkdisease then return false end
+      if !checkhealth(120) then return false end
+      if Wounds.neck > 1 then return false end
+      if Wounds.nerves > 0 then return false end
+      if Wounds.head > 1 then return false end
+      if percentmind > 95 then return false end
+
+      # need to add encumberance check too
+      
+      # are we alive
+      if checkdead then
+         # kill all scripts and log out
+         echo "dead somehow, logging out"
+         sleep 10
+         fput "exit"
+      end
+
+      return true
+end
+
+def lullabye (id)
+   loop {
+       if checkmana(20) then
+           multifput "prep 1005", "sing at ##{id}"
+	   sleep 1
+	   waitcastrt?
+       end
+
+       result = :again
+       cast_result = clear
+       # echo "checking to see if 1005 worked ", cast_result
+       cast_result.each { |game_string|
+           if game_string =~ /^\[Spell Hindrance for/ then
+              echo "cast failure, do it again"
+	      result = :again
+	      break
+	   else
+	      result = :done
+	   end
+       }
+       # echo "result is #{result}"
+       if result == :done then break end
+   }
+   return
+end
+
+before_dying {
+  multifput "stanc defensive", "stand"
+}
+
+target = next_npc()
+
+while target != nil do
+    #   group gangs up on target till dead, tell Rullas who to kill
+    if checkpcs("Rullas") != nil && running?("crosscharcom") then
+      unique_send_to_script("crosscharcom", "rullas exec start_script\(\"rullas-swing\", \[\'#{target.id}\'\] \) ")
+    end
+
+    waitcastrt?
+    waitrt?
+    
+    if target.name =~ /illoke/ then
+    # not sure what to do here
+      fput "prepare 1005", "sing at ##{target.id}"
+    elsif checkmana(30) && target.name !~ /giant/ then
+      if Spell[1001].active? then
+        fput "renew 1001"
+      else
+        fput "incant 1001"
+      end
+    elsif checkmana(30) && target.name =~ /giant/ then
+      lullabye(target.id)
+    end
+    sleep 0.1
+    waitcastrt?
+    
+    while (target.status != 'dead') &&
+          (checknpcs != nil) &&
+          (target.status != 'gone') do
+        #echo "target.status is ", target.status if $DEBUG == 1
+        multifput "stanc off", "attack ##{target.id}"
+        sleep 0.1
+        waitrt?
+        if GameObj.npcs.size > 1 then
+          echo "Too many mobs!, stop killing and run" if $DEBUG == 1
+          fput "incant 410"
+          waitcastrt?
+          exit
+        elsif !keephunting? then
+          # need to check if we are healthy
+          exit
+        end
+    end
+
+    target = next_npc() # get next target and try again
+end
+
+echo "gkill exiting, time to clean up" if $DEBUG == 1

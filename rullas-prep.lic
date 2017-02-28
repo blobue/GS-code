@@ -1,0 +1,21 @@
+echo "Preparing Rullas to hunt"
+
+ThanotophStart = 3576
+
+fput "stow all"
+
+start_script("rullas-dress")
+wait_while { running?("rullas-dress") }
+
+start_script("iSigils")
+sleep 1
+start_script("stand")
+sleep 1
+start_script("rullas-ems")
+sleep 1
+
+fput "get claidhmore from my backpack"
+sleep 1
+fput "whisper Fingrimbal Meet you there"
+
+start_script "go2", [ "#{ThanotophStart}" ]

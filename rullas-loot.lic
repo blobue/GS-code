@@ -1,0 +1,9 @@
+=begin
+rullas-loot
+=end
+
+start_script("sloot")
+wait_while{ running?("sloot") }
+sleep 1
+
+unique_send_to_script("crosscharcom", "rullas exec start_script\(\"grouploot\"\)")

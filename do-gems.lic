@@ -1,0 +1,16 @@
+# basic script to sing gems with pure2.lic
+# run to gemshop and sell the gems and orbs
+
+start_script "pure2", [ "pack", "greatcloak", "sack" ]
+wait_while { running?("pure2") }
+sleep 1
+
+start_script "pure2", [ "transfer", "greatcloak", "pack" ]
+wait_while { running?("pure2") }
+sleep 1
+
+#start_script "pure2", [ "transfer", "sack", "pack" ]
+#wait_while { running?("pure2") }
+#sleep 1
+
+echo "gems done!"

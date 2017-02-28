@@ -1,0 +1,167 @@
+=begin
+	# Author: blobue
+	# Categories: utility
+	# Tags: utility
+	# Version: 1.0
+This script runs startup scripts and sends Soneiken to hunt
+=end
+
+Home = 12537
+ThirdFloorBoundary = [ 12718, 12693 ]
+ThirdFloorStart = 12700
+
+$DEBUG = 1
+
+go_home = proc{
+	start_script("go2", [ starting_room_id, '_disable_confirm_' ])
+	wait_while { running?("go2")}
+}
+
+#get dressed
+start_script( "sone-prep" )
+wait_while { running?("sone-prep") }
+sleep 1
+
+#setup wander
+start_script "wander", [ "clear" ]
+wait_while { running?("wander") }
+
+ThirdFloorBoundary.each { |room|
+  start_script "wander", [ "add", "#{room}" ]
+  wait_while { running?("wander") }
+}
+#pause_script
+
+start_script "go2", [ "#{ThirdFloorStart}" ]
+wait_while { running?("go2") }
+#pause_scri
+echo "heading out to Nelemar area"
+
+echo "beginning main hunting loop" if $DEBUG == 1
+
+def keephunting?
+      if checkpoison then return false end
+      if checkdisease then return false end
+      if !checkhealth(110) then return false end
+      if Wounds.neck > 1 then return false end
+      if Wounds.nerves > 0 then return false end
+      if Wounds.head > 1 then return false end
+      if percentmind > 95 then return false end
+
+      # are we alive
+      if checkdead then
+         # kill all scripts and log out
+         echo "dead somehow, logging out"
+         sleep 10
+         fput "exit"
+      end
+
+      return true
+end
+
+def force-cast (id, spell)
+   loop {
+       if checkmana(20) then
+           multifput "prep #{spell}", "cast at ##{id}"
+	   sleep 1
+	   waitcastrt?
+       end
+
+       result = :again
+       cast_result = clear
+       # echo "checking to see if 1005 worked ", cast_result
+       cast_result.each { |game_string|
+           if game_string =~ /^\[Spell Hindrance for|FUMBLE/ then
+              echo "cast failure, do it again"
+	      result = :again
+	      break
+	   else
+	      result = :done
+	   end
+       }
+       # echo "result is #{result}"
+       if result == :done then break end
+   }
+   return
+end
+
+def tooScary?
+  # count up mobs that are scary and return true if we should try another room
+  bad_count = 0
+
+  GameObj.npcs.each { |mob| 
+    if mob.name =~ /dissembler/ then
+      bad_count = bad_count + 1
+    end
+  }
+  
+  echo "counting pyros, we found ", bad_count if $DEBUG == 1
+  return true if bad_count > 2
+  return false
+
+end
+
+while keephunting? do
+      #if VERBOSITY != nil then echo "iterating through main loop" end
+
+      #turn stamina into mana if we can
+      if ( !checkmana(30) && checkstamina(60) ) then
+      	fput "sigil of power"
+        # someday write a subroutine to run and find a siren
+        # cast 711 twice, 706 then sacrifice her for mana
+      end
+      
+      # let's find something to kill
+      if script.vars[1] != nil then
+        start_script( "wander", [ "#{script.vars[1]}" ] )
+      else
+        start_script "wander"
+      end
+      wait_while { running?("wander") }
+
+      #how many baddies, more than 1 and we keep going
+      if GameObj.npcs.size > 3 || tooScary?
+      	 next
+      else
+         # gkill logic here
+         # make a target list and start killing
+         # time to kill
+	 echo "get killin!"
+         start_script "skill"
+         wait_while{ running?("skill") }
+         sleep 0.1
+         #
+	 # after killing logic here
+         # have Rullas loot and communicate back any conditions
+         # Rullas should be able to send us home if he's in trouble too
+	 #
+         fput "stanc def"
+	 start_script "sloot"
+         wait_while{ running?("sloot" ) }
+         sleep 0.1
+         
+         # pause_script
+      end
+      
+end
+
+# check to see if we are dead, yeah it happens, kill off scripts and logout
+
+start_script "go2", [ "#{Home}" ]
+wait_while { running?("go2") }
+
+start_script( "sone-end" )
+wait_while { running?("sone-end") }
+
+before_dying {
+  stop_script("iSigils")
+  stop_script("stand")
+}
+#should heal up if necessary
+
+echo "sonehunt ending"
+
+sleep 1
+
+
+	

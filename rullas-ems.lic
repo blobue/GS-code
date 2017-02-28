@@ -1,0 +1,50 @@
+=begin
+rullas-ems.lic
+
+this script exists to be run when the boys are hunting. It detects life
+threatening situations for rullas and kills all hunting related scripts and 
+runs rullas back home.
+
+=end
+
+def run_screaming?
+  if !checkhealth(80) then return true end
+  if dead? then
+    echo "you died, really"
+    kill_script( "stand" )
+    exit
+  end
+  
+  return false
+end
+
+until run_screaming? do
+
+  sleep 5
+  
+end
+
+# at this point we are running home no matter what
+echo "Run you mofo!"
+
+kill_script "go2"  # just in case
+start_script( "go2", [ '14627' ] )
+
+wait_while{ running?("go2") }
+sleep 0.1
+
+# kill hunting scripts
+kill_script "iSigils"
+kill_script "stand"
+
+# if pinipin is in the room ask for healing
+
+if checkpcs("Pinipin") != nil then
+  fput "whisper pinipin heal me"
+else
+  start_script( "herbheal" )
+  wait_while{ running?("herbheal") }
+  sleep 0.5
+  kill_script "go2"  # just in case
+  start_script( "go2", [ '14627' ] )
+end

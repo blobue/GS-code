@@ -1,0 +1,44 @@
+=begin
+
+process all the damn loot
+
+=end
+
+#tell rullas to drop any boxes he has and turn his disk
+#if taebaek is here have him pick
+
+if checkpcs("Rullas") == nil then
+  sleep 60
+  if checkpcs("Rullas") == nil
+    exit
+  end
+end
+
+unique_send_to_script("crosscharcom", "rullas turn rullas disk")
+unique_send_to_script("crosscharcom", "rullas remove cloak")
+unique_send_to_script("crosscharcom", "rullas give cloak to fing")
+sleep 1
+
+matchtimeout 10, "Rullas offers you"
+multifput "accept", "empty cloak in my pack"
+waitrt?
+waitrt?
+sleep 2
+
+fput "give cloak to rullas"
+sleep 3
+unique_send_to_script("crosscharcom", "rullas accept")
+
+matchtimeout 10, "Rullas has accepted"
+sleep 1
+
+unique_send_to_script("crosscharcom", "rullas wear cloak")
+sleep 3
+fetchloot
+
+#check for Tae
+
+start_script( "sloot", [ 'sell' ] )
+wait_while{ running?("sloot") }
+sleep 0.5
+echo "loot gone!"

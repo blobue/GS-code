@@ -1,0 +1,78 @@
+=begin
+	# Author: blobue
+	# Categories: utility
+	# Tags: utility
+	# Version: 1.0
+This script undresses Fin and stops 1019 and checks for any bad conditions
+=end
+
+go_home = proc{
+	start_script("go2", [ starting_room_id, '_disable_confirm_' ])
+	wait_while { running?("go2")}
+}
+
+echo "Preparing Fingrimbal to rest"
+
+fput "stow naginata"
+
+# start sanct and waggle group
+while !Spell[1011].active? do
+   wait_while{ !checkmana(30) }
+   fput "incant 1011"
+   waitcastrt?
+   fput "spell active"
+   sleep 1
+end
+
+start_script("fin-undress")
+wait_while { running?("fin-undress") }
+
+fput "stop singing 1019"
+waitcastrt?
+
+stop_script("iSigils")
+sleep 1
+stop_script("stand")
+
+if ( checkpoison || checkdisease )
+   echo "Fin hurt, go fix that"
+end
+
+next_step = matchtimeout 15, "Rullas whispers\, \"Done healing"
+
+# Rullas should be done so go fix ourself
+fput "hold rullas"
+sleep 1
+
+if ( checkpoison || checkdisease || !checkhealth(170) )
+  echo "Fin hurt, go fix that"
+  if checkpcs("Pinipin") == nil then
+    echo "pausing script"
+    pause_script
+    sleep 1
+  else
+    fput "whisper Pinipin heal me"
+  end
+end
+
+start_script( "go2", [ '14627' ] )
+wait_while{ running?("go2") }
+sleep 1
+
+start_script( "waggle" )
+wait_while{ running?("waggle") }
+sleep 2
+
+start_script( "waggle", [ 'Rullas' ] )
+wait_while{ running?("waggle") }
+sleep 2
+
+echo "selling off junk"
+
+start_script( "process-loot" )
+wait_while{ running?("process-loot") }
+sleep 2
+
+
+
+

@@ -1,0 +1,23 @@
+=begin
+
+fin-add-rullas
+
+Fin adds Rullasto his bounty task
+
+=end
+
+start_script( "go2", [ 'advguild' ] )
+wait_while{ running?("go2") }
+sleep 1
+
+unique_send_to_script("crosscharcom", "rullas ask dayle about removal")
+sleep 1
+unique_send_to_script("crosscharcom", "rullas ask dayle about removal")
+sleep 1
+
+multifput "ask dayle about adding rullas"
+sleep 1
+
+start_script( "go2", [ '12537' ] )
+wait_while{ running?("go2") }
+sleep 1

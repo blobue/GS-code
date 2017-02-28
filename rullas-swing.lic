@@ -1,0 +1,106 @@
+=begin
+Rullas swing
+=end
+$npc_order        = ['giant', 'troll']
+$group            = []
+$ignore_creatures = /child|nest|dobrem|cat/
+
+def next_npc()
+    $critter = nil
+
+    if GameObj.npcs.size > 2 then
+      echo "Too many mobs!, stop killing and run" if $DEBUG == 1
+      exit
+    end
+    
+    $npc_order.each do |name|
+      $critter = GameObj.npcs.find{ |npc| npc.name =~ /#{name}/i and npc.status !~ /dead|gone/i and not npc.name =~ $ignore_creatures}
+      return $critter unless $critter.nil?
+    end
+    GameObj.npcs.each do |npc|
+      return npc if npc.status !~ /dead|gone/i and not npc.name =~ $ignore_creatures
+    end
+    nil
+end
+
+def keephunting?
+      if checkpoison then return false end
+      if checkdisease then return false end
+      if !checkhealth(100) then return false end
+      if Wounds.neck > 1 then return false end
+      if Wounds.nerves > 1 then return false end
+      if Wounds.head > 1 then return false end
+
+      # are we alive
+      if checkdead then
+         # kill all scripts and log out
+         echo "dead somehow, logging out"
+         sleep 10
+         fput "exit"
+      end
+
+      return true
+end
+
+before_dying {
+  multifput "stanc defensive", "stand"
+  if GameObj.dead != nil then
+    # loot if stuff is dead
+    sleep 0.5
+    start_script("grouploot")
+  end 
+}
+
+if script.vars[0] == nil then
+  target = next_npc()
+else
+  echo "got target ", script.vars[1].inspect
+  GameObj.npcs.each do |mob|
+    if script.vars[1] == mob.id then
+      target = mob
+    else
+      # echo "script.vars[1] is: ", script.vars[1]
+      # echo "mob.id is: ", mob.id
+    end
+  end
+  echo "now targeting mob id: ", target.id
+  
+end
+
+#tangleweed or calm
+
+if checkmana(30) then
+  if GameObj.npcs.size == 1 then
+    fput "incant 610"
+  else
+    fput "incant 619"
+  end
+  sleep 0.5
+  waitcastrt?
+end
+
+while target != nil do
+    #   group gangs up on target till dead
+
+  fput "stow left" if checkleft != nil
+  
+  while (target.status != 'dead') &&
+        (checknpcs != nil) &&
+        (target.status != 'gone') do
+        multifput "stanc off", "attack ##{target.id}"
+        sleep 1
+        waitrt?
+        if GameObj.npcs.size > 2 then
+           echo "Too many mobs!, stop killing and run" if $DEBUG == 1
+           exit
+        elsif !keephunting? then
+          # need to check if we are healthy
+          echo "we are hurt, get out of here." if $DEBUG == 1
+          exit
+        end
+    end
+
+    target = next_npc() # get next target and try again
+end
+
+echo "gkill exiting, time to clean up" if $DEBUG == 1

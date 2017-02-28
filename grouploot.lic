@@ -1,0 +1,70 @@
+=begin
+grouploot.lic
+
+script run by Rullas to handle mobs and whisper back to Fin so he can go on
+this is also Rullas's chance to tell Fin to head back home if he gets hurt
+check that first
+=end
+
+$DEBUG = 1
+
+def keephunting?
+      if checkpoison then return false end
+      if checkdisease then return false end
+      if !checkhealth(100) then return false end
+      if Wounds.neck > 1 then return false end
+      if Wounds.nerves > 1 then return false end
+      if Wounds.head > 1 then return false end
+      # if percentmind > 95 then return false end
+
+      # are we alive
+      if checkdead then
+         # kill all scripts and log out
+         echo "dead somehow, logging out"
+         sleep 10
+         fput "exit"
+      end
+
+      return true
+end
+
+if !keephunting? then
+  # time to scram
+  echo "something is wrong, go home and fix it" if $DEBUG == 1
+  waitrt?
+  fput "whisper Fingrimbal Run home"
+  exit
+end
+
+if running?("rullas-swing") then
+  # swing for a maximum of 10 seconds, the stop
+  sleep(1)
+  echo "killing rullas-swing"
+  kill_script( "rullas-swing" )
+  waitcastrt?
+  waitrt?
+  fput "whisper Fingrimbal Done looting"
+  exit
+end
+
+waitrt?
+waitcastrt?
+
+start_script("sloot")
+wait_while { running?("sloot") }
+sleep 0.5
+5.times {
+  if checkpcs("Fingrimbal") != nil then
+    waitrt?
+    fput "whisper Fingrimbal done looting"
+    exit
+  end
+  echo "Grouploot: Fin not in the room! Waiting to try again" if $DEBUG == 1
+  sleep 1
+}
+
+# bad at this point, run home
+start_script('go2', ['14627'])
+wait_while{ running?("go2") }
+sleep 0.5
+echo "bugged out while looting, check on other party members"

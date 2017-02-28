@@ -1,0 +1,8 @@
+
+enhancive_stuff = [ "badge", "greaves" ]
+
+enhancive_stuff.each do |x|
+  fput "get #{x} from my backpack"
+  fput "wear #{x}"
+  sleep 1
+end
