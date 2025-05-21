@@ -1,0 +1,23 @@
+=begin
+
+ lav-add-all.lic
+
+ 3/30/2021 simple script for laviticas to add Rullas and Fin
+
+=end
+
+echo 'adding Fin and Rullas to a Laviticas bounty'
+
+fput 'group lead lavit'
+pause 1
+
+start_script "queen", [ "laviticas", "ask dayle about adding fing" ]
+wait_while { running? "queen" }
+pause 2
+
+start_script "queen", [ "laviticas", "ask dayle about adding rullas" ]
+wait_while { running? "queen" }
+pause 2
+
+start_script "queen", [ "laviticas", "group lead fing" ]
+wait_while { running? "queen" }

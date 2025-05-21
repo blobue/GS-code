@@ -1,0 +1,19 @@
+=begin
+
+lav-steam.lic
+simple script to have Laviticas cast 903 (steam)
+
+2/15/2021
+Brian LoBue
+=end
+
+echo "casting 518"
+fput "say casting steam!"
+
+fput "stanc off"
+waitrt?
+
+fput "incant 903 channel evoke"
+waitrt?
+
+fput "stanc def"

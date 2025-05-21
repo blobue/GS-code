@@ -1,0 +1,37 @@
+=begin
+
+ lav-spells-for-all.lic
+
+ 3/25/2021
+
+ cast mass blur once, ;waggle rullas, ;waggle fing
+
+=end
+
+echo 'starting Laviticas spellup cycle'
+
+pause 3
+waitrt?
+
+fput "incant 911"
+pause 1
+waitrt?
+
+start_script "waggle" , [ "rullas" ]
+pause 3
+waitrt?
+
+wait_while { running? "waggle" }
+pause 1
+waitrt?
+
+start_script "waggle", [ "fingrimbal" ]
+pause 3
+waitrt?
+
+wait_while { running? "waggle" }
+pause 1
+waitrt?
+
+fput 'whisper fing all done with spellups'
+echo 'Laviticas done spelling up friends'

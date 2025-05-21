@@ -1,0 +1,49 @@
+=begin
+
+lav-after-hunt.lic
+simple script to rest after battle for Laviticas
+
+12/31/2020
+Brian LoBue
+=end
+
+echo "resting Laviticas after battle"
+pause 3
+
+fput "stow all"
+
+kill_script "iSigns"
+kill_script "stand"
+kill_script "disarmwatch"
+kill_script "manaleech"
+
+multifput "remove my badge", "stow my badge", "remove my crown", "stow my crown", "remove mithril ring", "stow my mithril ring"
+
+pause 2
+
+start_script("go2", [ "1932" , '_disable_confirm_' ])
+wait_while { running?("go2")}
+
+if Wounds.neck >= 2 then
+  fput "get aloeas stem"
+  fput "eat stem"
+  waitrt?
+  if Wounds.neck >=2 then
+    multifput "get aloeas stem", "eat stem"
+    waitrt?
+  end
+end
+
+start_script("useherbs", [ "in bin --buy=off" ])
+wait_while { running?("useherbs") }
+
+start_script("useherbs", [ "on bench --mending=on" ])
+wait_while { running?("useherbs") }
+
+start_script("eloot", ["sell"])
+wait_while { running?("eloot") }
+
+fput "info"
+fput "exp"
+
+echo "ready to rest"

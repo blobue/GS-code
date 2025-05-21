@@ -1,0 +1,30 @@
+=begin
+
+lav-prep-hunt.lic
+simple script to prepare Laviticas for battle
+
+12/31/2020
+Brian LoBue
+=end
+
+echo "preparing Laviticas for battle"
+pause 0.5
+
+fput "stow all"
+
+start_scripts "iSigns", "stand", "disarmwatch", "manaleech"
+
+pause 2
+
+multifput "stanc def", "get badge from my backpack", "wear badge", "get crown from my backpack", "wear crown", "get mithril ring from my backp", "wear mithril ring"
+
+fput "info"
+fput "exp"
+
+multifput "get runestaff from my backpack", "tell fam to stay"
+
+fput "glance"
+
+echo "ready to go!"
+
+#fput "whisper fingrimbal I'm set"

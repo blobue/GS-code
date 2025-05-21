@@ -1,0 +1,115 @@
+=begin
+
+lav-acid.lic
+simple script to have Laviticas cast 903 (steam)
+
+2/15/2021
+Brian LoBue
+=end
+
+before_dying {
+  waitrt?
+  fput "stanc def"
+  echo "script dying"
+}
+
+module LavAcid
+  extend self
+  
+  def CheckSafeRoom
+    emergency1 = GameObj.targets.find { |mob| mob.name == 'greater water elemental' }
+    emergency2 = GameObj.targets.find { |mob| mob.name == 'ethereal triton sentry' }
+    
+    if (emergency1 != nil || emergency2 != nil) then # sound the alarm
+      echo "bad mofos here!"
+      echo "you should consider running!"
+      exit
+    else
+      echo "room is safe, proceed..."
+    end
+  end
+
+  def HandleCrowds
+    echo "Calling HandleCrowds"
+    # try and disarm a solo mob
+    if GameObj.targets.size <= 2
+      echo "solo mob, just bolt them"
+    elsif GameObj.targets.size <= 4 && checkmana > 20
+      multifput "stanc off", "incant 518 evoke acid"
+    #elsif checkmana > 50
+     # multifput "stanc off", "incant 950"
+    end
+    waitrt?
+  end
+
+  def CheckFitness #returns true if good, else false
+    echo "checking fitness"
+    if (checkhealth <= 100 || Char.percent_encumbrance > 10 || Wounds.head >= 2 || Wounds.nerves >= 2) then
+      echo "exiting acid due to fitness failure"
+      return false
+    else return true
+    end
+  end
+
+  def KillLoop
+
+    order = [ "defender", "radical", "combatant", "executioner", "siren", "thug", "bandit", "thief", "rogue", "outlaw", "highwayman", "marauder", "brigand", "robber" ]
+
+    echo "there are " + GameObj.targets.size.to_s + " mobs"
+
+    while !GameObj.targets.empty? do
+      # check to see if any targets are alive
+      # if all are dead then leave the loop with break
+
+      exit if !self.CheckFitness 
+    
+      if GameObj.targets.size > 1 # should check if enough mana
+        self.HandleCrowds
+      end
+
+      order.each do |critter|
+        # echo "checking for : " + critter.to_s
+
+        targs = GameObj.targets.select { |mob|
+          # echo "comparing " + mob.noun + " to " + critter.to_s
+          mob.noun == critter.to_s
+        }
+        # echo "we have " + targs.size.to_s + " targets"
+        targs.each { |to_kill|
+          # echo "got a hit on " + to_kill.to_s
+          while !(to_kill.status == 'dead' || to_kill.status == 'gone') do
+            # echo "mob has status " + to_kill.status.to_s
+            exit if !self.CheckFitness
+            multifput "stanc off", "incant 904 channel evoke ##{to_kill.id}"
+            waitrt?
+            # break if GameObj.targets.size > 3 # stop swinging if too many mobs
+            # is the mob dead? or gone if so kill the next else we need to keep swinging
+            if GameObj.targets.size >= 3
+              self.HandleCrowds
+            end
+          end
+        }
+      end
+
+      multifput "stanc off", "incant 904 channel evoke"
+      # we could also test for "You currently have no valid target. You will need to specify one."
+      #sleep 1
+      waitrt?
+
+      break if GameObj.targets.size == 0
+    end
+
+  end
+
+  def CleanExit
+    waitrt?
+    fput "stanc defen"
+    start_script "eloot"
+    echo "lav-acid exiting"
+  end
+  
+end
+
+LavAcid.CheckSafeRoom
+LavAcid.KillLoop
+LavAcid.CleanExit

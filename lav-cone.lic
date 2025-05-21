@@ -1,0 +1,19 @@
+=begin
+
+lav-cone.lic
+simple script to have Laviticas cast 518
+
+12/31/2020
+Brian LoBue
+=end
+
+echo "casting 518"
+fput "say casting cone!"
+
+fput "stanc off"
+waitrt?
+
+fput "incant 518 acid"
+waitrt?
+
+fput "stanc def"

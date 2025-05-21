@@ -1,0 +1,130 @@
+=begin
+
+lav-temple-looper.lic
+
+simple script to suit Laviticas up, run him to temple 3rd floor, start wandering for creature
+given in command line, execute lav-acid, loot the room then pause, and do it again
+
+Brian LoBue 05-2025
+
+=end
+
+# All Requirements
+require 'yaml'
+require 'drb'
+require 'fileutils'
+require 'logger'
+
+module LavTempleLooper
+  extend self
+
+  def initialise
+    # get laviticas suited up
+    echo "calling initilise"
+        if ! checkname ( "Laviticas" ) then
+      echo "Totally the wrong dude!"
+      exit
+    end
+    echo "Got the following string as input " + Script.current.vars[0].to_s
+    start_script "lav-prep-hunt"
+    wait_while { running? ("lav-prep-hunt" ) }
+    pause 1
+  end
+
+  def back_to_town
+    echo "calling back_to_town"
+    fput "incant 930"
+    waitrt?
+    fput "go portal"
+    pause 1
+    if checkarea == 'Ruined Temple' then
+      # just run in
+      echo "running home"
+      start_script "go2", ["1932", '_disable_confirm_' ] 
+    end
+    pause_script
+    start_script 'lav-after-hunt'
+    exit
+  end
+
+  def check_ready
+    # did everything work?
+    echo "calling check-ready"
+    echo "fitness check"
+    if !checkhealth(100) || Wounds.neck >= 2 || Wounds.head >= 2 || Wounds.nsys >= 2 then
+      echo "hurt, go home"
+      LavTempleLooper.back_to_town
+    end
+
+    if checkbleeding then
+      fput "sign of staunching"
+      waitrt?
+      pause 1
+    end
+    
+    if percentmind > 95 then
+      fput "boost long"
+    end
+    if mana < 50 then
+      echo "all tapped out, go home"
+      LavTempleLooper.back_to_town
+    end
+    if Char.percent_encumbrance > 10  then
+      echo "exiting acid due to fitness failure"
+      LavTempleLooper.back_to_town
+    end
+  end
+
+
+  def run_out
+    echo "calling run_out to go to temple"
+    start_script("go2", ["12700" ])
+    pause 2
+    wait_while { running? ("go2") }
+  end
+
+  def main_loop
+
+    first = nil
+    
+    loop do
+      # all the stuff to do
+      LavTempleLooper.check_ready
+      echo "Pausing script: lav-temple-looper " + Script.current.vars[0].to_s
+      if first == nil then
+        echo "In looper doing first pause in start room"
+        first = true
+        pause_script
+      end
+      
+      start_script( "wander", [ Script.current.vars[1].to_s ] )
+      wait_while { running? ("wander") }
+      start_script( "lav-acid" )
+      wait_while { running? ("lav-acid") }
+      pause 1
+      if Bounty.type.to_s == 'rescue_spawned' then
+        echo "Found kid, walk them back"
+        start_script 'echild'
+        kill_script 'manaleech'
+        kill_script 'stand'
+        kill_script 'isigns'
+        echo 'ending temple looper and walking back now'
+        pause 3
+        exit
+      elsif Bounty.type.to_s == 'guard' || Bounty.type.to_s == 'heirloom_found' then
+        echo "Bounty done, get home and turn it in"
+        LavTempleLooper.back_to_town
+        pause 3
+        exit
+      end
+    end
+  end
+end
+
+LavTempleLooper.initialise
+LavTempleLooper.check_ready
+LavTempleLooper.run_out
+LavTempleLooper.main_loop
+
+
+
