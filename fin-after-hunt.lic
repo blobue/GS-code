@@ -1,0 +1,49 @@
+=begin
+
+fin-after-hunt.lic
+simple script to prepare fingrimbal for rest
+
+7/3/2020
+Brian LoBue
+=end
+
+echo "preparing Fingrimbal for rest"
+pause 3
+
+#start_script "queen", [ "rullas", ";rullas-after-hunt" ]
+#wait_while { running? "queen" }
+#pause 1
+#start_script "queen", [ "laviticas", ";lav-after-hunt" ]
+
+fput "stow all"
+
+stop_scripts "iSigils", "stand", "tonis"
+start_script "fin-undress"
+wait_while { running?("fin-undress") }
+
+pause 2
+
+multifput "stop singing 1017", "stop singing 1019"
+waitrt?
+
+fput "info"
+fput "exp"
+
+start_script("go2", [ "1932" , '_disable_confirm_' ])
+wait_while { running?("go2")}
+
+start_script("useherbs", [ "in bin --mending=on --buy=off" ])
+wait_while { running? ("useherbs" ) }
+
+start_script("useherbs", [ "on bench --mending=on" ])
+wait_while { running?("useherbs") }
+
+start_script("eloot", ["sell"])
+wait_while { running?("eloot") }
+
+pause 1
+echo "All done after hunting!"
+
+
+
+

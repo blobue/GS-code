@@ -1,0 +1,103 @@
+=begin
+
+fin-camp.lic
+
+simple swinging script for the bard in camps
+
+Brian LoBue 5/2025
+
+=end
+
+# let's see what's here and make some decisions
+#
+# emergency list of critters to always run from
+#
+
+
+before_dying {
+  waitrt?
+  fput "stanc def"
+  echo "script dying"
+}
+
+module FinCamp
+  extend self
+
+  def HandleCrowds # not much to do except maybe just run or sing out
+    echo "Calling HandleCrowds"
+    # try and disarm a solo mob
+    if GameObj.targets.size > 5
+      echo "more than 5 grims, you'd better go!!!"
+      waitrt?
+      fput "stanc def"
+      pause
+    end
+  end
+
+  def CheckFitness
+    # are we fit to kill? if not then exit
+    if percenthealth < 70 then
+      echo "time to run!"
+      if Wounds.nerves == 3 || Wounds.head == 3 then
+        start_script("go2", [ "1957", '_disable_confirm_' ])
+      elsif checkmana 30
+        fput "incant 1020"
+      end
+    end
+  end
+
+  def KillLoop
+    # Go after pures first sorcs, mages, clerics, empaths, then rangers then all else
+    order = [ "dissembler", "sorcerer", "sorceress", "warlock", "witch", "adept", "archmage", "mage", "elementalist", "warmage", "acolyte", "cleric", "initiate", "empath", "healer", "scourage", "hunter", "ranger" ]
+
+      echo "GameObj.targets is : " + GameObj.targets.join(",")
+
+      echo "there are " + GameObj.targets.size.to_s + " mobs"
+
+      while !GameObj.targets.empty? do
+        # check to see if any targets are alive
+        # if all are dead then leave the loop with break
+
+        self.HandleCrowds
+        
+        order.each do |critter|
+          #echo "checking for : " + critter.to_s
+          
+          targs = GameObj.targets.select { |mob|
+            # echo "comparing " + mob.noun + " to " + critter.to_s
+            mob.noun == critter.to_s
+          }
+          # echo "we have " + targs.size.to_s + " targets"
+          targs.each { |to_kill|
+            echo "got a hit on " + to_kill.to_s
+            while !(to_kill.status == 'dead' || to_kill.status == 'gone') do
+              # echo "mob has status " + to_kill.status.to_s
+              multifput "stanc off", "kill ##{to_kill.id}"
+              waitrt?
+              # break if GameObj.targets.size > 3 # stop swinging if too many mobs
+              # is the mob dead? or gone if so kill the next else we need to keep swinging
+            end
+          }
+        end
+
+        multifput "stanc off", "kill"
+        # we could also test for "You currently have no valid target. You will need to specify one."
+        #sleep 1
+        waitrt?
+
+        break if GameObj.targets.size == 0
+      end
+  end
+
+  def CleanExit
+    waitrt?
+    fput "stanc defen"
+    start_script "eloot"
+    echo "fin-camp exiting"
+  end
+
+end
+
+FinCamp.CheckFitness
+FinCamp.KillLoop
+FinCamp.CleanExit

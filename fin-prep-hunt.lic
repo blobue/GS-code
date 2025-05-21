@@ -1,0 +1,53 @@
+=begin
+
+fin-prep-hunt.lic
+simple script to prepare fingrimbal for battle
+
+7/3/2020
+Brian LoBue
+=end
+
+echo "preparing Fingrimbal for battle"
+pause 3
+
+=begin
+start_script "queen", [ "rullas", ";rul-prep-hunt" ]
+wait_while { running? "queen" }
+pause 1
+start_script "queen", [ "laviticas", ";lav-prep-hunt" ]
+=end
+
+fput "stow all"
+
+start_scripts "iSigils", "stand", "fin-dress"
+
+wait_while { running? ("fin-dress" ) }
+pause 2
+
+fput "stop singing 1011"
+pause 3
+
+until Spell[1019].active? do
+  fput "incant 1019"
+  waitrt?
+end
+
+echo "make sure to sing or grab a weapon"
+echo "ready to go!"
+# fput "get hammer from my pack"
+
+until Spell[1012].active? do
+  fput "incant 1012 lance"
+  waitrt?
+end
+
+pause 4
+fput "glance"
+echo "remember to start tonis"
+
+#echo "singing an animated halberd too"
+
+#waitrt?
+#fput "prep 1025"
+#pause 1
+#fput "sing halberd"

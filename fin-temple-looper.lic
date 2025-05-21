@@ -1,0 +1,131 @@
+=begin
+
+fin-temple-looper.lic
+
+simple script to suit Fingrimbal up, run him to temple 3rd floor, start wandering for creature
+given in command line, execute lav-acid, loot the room then pause, and do it again
+
+Brian LoBue 05-2025
+
+=end
+
+# All Requirements
+require 'yaml'
+require 'drb'
+require 'fileutils'
+require 'logger'
+require 'terminal-table'
+
+module FinTempleLooper
+  extend self
+
+  def initialise
+    # get Fingrimbal suited up
+    echo "calling initilise"
+    # Check that we have the right character!
+    if ! checkname ( "Fingrimbal" ) then
+      echo "Totally the wrong dude!"
+      exit
+    end
+    echo "Got the following string as input " + Script.current.vars[0].to_s
+    start_script "fin-prep-hunt"
+    wait_while { running? ( "fin-prep-hunt" ) }
+    pause 1
+  end
+
+  def back_to_town
+    echo "calling back_to_town"
+    fput "incant 1020"
+    waitrt?
+    if checkarea == 'Ruined Temple' then
+      # just run in
+      echo "running home"
+      start_script "go2", ["1932", '_disable_confirm_' ] 
+    end
+    wait_while { running? ("go2") }
+    echo "pausing temple looper, unpause to clean up"
+    pause_script
+    start_script 'fin-after-hunt'
+    exit
+  end
+
+  def check_ready
+    # did everything work?
+    echo "calling check-ready"
+    echo "fitness check"
+    if !checkhealth(120) then
+      echo "hurt, go home"
+      FinTempleLooper.back_to_town
+    end
+    
+    #echo "check_ready: Percent mind is   " + percentmind.to_s
+    #echo "check_ready: Health points are " + checkhealth.to_s
+    #echo "check_ready: Encumberance is   " + Char.percent_encumbrance.to_s
+    if stamina > 75 and mana < 200 then
+      echo "generating mana!"
+      fput "sigil of power"
+    end
+    if percentmind > 95 then
+      fput "boost long"
+    end
+    if mana < 50 and stamina < 75 and !Spell[1035].active? then
+      echo "all tapped out, go home"
+      FinTempleLooper.back_to_town
+    end
+  end
+
+  def run_out
+    echo "calling run_out to go to temple"
+    start_script("go2", ["12700" ])
+    pause 2
+    wait_while { running? ("go2") }
+    pause 1
+  end
+
+  def start_tonis
+    start_script( "tonis" )
+    pause 1
+  end
+
+  def main_loop
+
+    first = nil
+
+    loop do
+      # all the stuff to do
+      FinTempleLooper.check_ready
+      echo "Pausing script: fin-temple-looper " + Script.current.vars[0].to_s
+      if first == nil then
+        echo "In looper doing first pause in start room"
+        first = true
+        pause_script
+      end
+      
+      #echo "Pausing script: fin-temple-looper " + Script.current.vars[0].to_s
+      #pause_script
+      start_script( "wander", [ Script.current.vars[1].to_s ] )
+      wait_while { running? ("wander") }
+      start_script( "fin-kill" )
+      wait_while { running? ("fin-kill") }
+      pause 1
+      if Bounty.type.to_s == 'rescue_spawned' then
+        echo "Found kid, walk them back"
+        start_script 'echild'
+        kill_script 'tonis'
+        kill_script 'stand'
+        kill_script 'isigils'
+        echo 'ending temple looper and walking back now'
+        pause 3
+        exit
+      end
+    end
+  end
+  
+end
+
+FinTempleLooper.initialise
+FinTempleLooper.check_ready
+FinTempleLooper.run_out
+FinTempleLooper.start_tonis
+FinTempleLooper.main_loop
+

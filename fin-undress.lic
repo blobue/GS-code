@@ -1,28 +1,33 @@
 =begin
-	# Author: blobue
-	# Categories: utility
-	# Tags: utility
-	# Version: 1.0
-This script rips through an array and stows enhancives for Fin
+
+fin-undress.lic
+simple script to undress fingrimbal after battle
+
+7/3/2020
+Brian LoBue
 =end
 
-go_home = proc{
-	start_script("go2", [ starting_room_id, '_disable_confirm_' ])
-	wait_while { running?("go2")}
-}
+# old list 4/2025 items = [ "badge", "talisman", "talisman", "band", "circlet", "necklace", "torc" ]
+items = [ "badge", "talisman", "torc", "band", "necklace", "earcuff", "pin", "stickpin", "torc", "headband", "clasp", "clasp" ]
+fput "stow all"
 
-enhancive_stuff = [ "badge", "neckchain", "band", "wristcuff", "talisman", "talisman", "greaves", "greaves" ]
+# get things from my pack
+=begin
+items.each { |it|
+	   multifput "remov #{it}", "put #{it} in my backpack"
+	   sleep 0.5
+	   }
+=end
+# using armoire now
+fput "get armoire from my backpack"
+pause 1
+fput "open my armoire"
+pause 1
+fput "close my armoire"
+pause 1
+fput "stow all"
+pause 1
 
-enhancive_stuff.each do |x|
-  fput "remove #{x}"
-  fput "stow #{x}"
-  sleep 1
-end
+echo "done undressing now"
 
-	
-
-
-
-
-
-
+multifput "inventory"

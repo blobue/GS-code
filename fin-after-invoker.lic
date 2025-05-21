@@ -1,0 +1,40 @@
+=begin
+
+fin-after-invoker.lic
+
+stop magic that will be stripped in temple for Fin
+
+05-2025 Brian LoBue
+=end
+
+to_be_dropped = [ "104", "105", "112", "207", "1204", "1208" ]
+
+to_be_dropped.each do |snum|
+  waitrt?
+  fput "stop spell " + snum.to_s
+  pause 1
+end
+
+=begin
+waitrt?
+fput "stop spell 104"
+pause 1
+waitrt?
+fput "stop spell 105"
+pause 1
+waitrt?
+fput "stop spell 112"
+pause 1
+waitrt?
+fput "stop spell 207"
+pause 1
+waitrt?
+fput "stop spell 1204"
+pause 1
+waitrt?
+fput "stop spell 1208"
+=end
+
+echo "all spells dropped"
+
+# super inelegant now, switch to list later on

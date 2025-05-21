@@ -1,0 +1,123 @@
+=begin
+
+fin-kill.lic
+
+simple stanc dance script for the bard
+
+Brian LoBue 7/9/2020
+
+=end
+
+# let's see what's here and make some decisions
+#
+# emergency list of critters to always run from
+#
+
+
+before_dying {
+  waitrt?
+  fput "stanc def"
+  echo "script dying"
+}
+
+module FinKill
+  extend self
+
+  def CheckSafeRoom
+    emergency1 = GameObj.targets.find { |mob| mob.name == 'greater water elemental' }
+    emergency2 = GameObj.targets.find { |mob| mob.name == 'ethereal triton sentry' }
+
+    if (emergency1 != nil || emergency2 != nil) then # sound the alarm
+      echo "bad mofos here!"
+      echo "you should consider running!"
+      exit
+    else
+      echo "room is safe, proceed..."
+    end
+  end
+
+  def HandleCrowds
+    echo "Calling HandleCrowds"
+    # try and disarm a solo mob
+    if GameObj.targets.size == 1 && checkmana > 10
+      fput "incant 1002"
+      waitrt?
+    elsif GameObj.targets.size <= 3 && checkmana > 20
+      fput "incant 410"
+    elsif checkmana > 50
+      fput "incant 1030"
+    end
+  end
+
+  def CheckFitness
+    # are we fit to kill? if not then exit
+    if percenthealth < 70 then
+      echo "time to run!"
+      if Wounds.nerves == 3 || Wounds.head == 3 then
+        start_script("go2", [ "1957", '_disable_confirm_' ])
+      elsif checkmana 30
+        fput "incant 1020"
+      end
+      if running? "fin-temple-looper" then
+        kill_script "fin-temple-looper"
+      elsif running? "bandit-patrol" then
+        kill_script "bandit-patrol"
+      end
+    end
+  end
+
+  def KillLoop
+      order = [ "defender", "radical", "combatant", "executioner", "siren", "magus", "dissembler", "thug", "bandit", "thief", "rogue", "outlaw", "highwayman", "marauder", "brigand", "robber" ]
+
+      echo "GameObj.targets is : " + GameObj.targets.join(",")
+
+      echo "there are " + GameObj.targets.size.to_s + " mobs"
+
+      while !GameObj.targets.empty? do
+        # check to see if any targets are alive
+        # if all are dead then leave the loop with break
+
+        self.HandleCrowds
+        
+        order.each do |critter|
+          #echo "checking for : " + critter.to_s
+          
+          targs = GameObj.targets.select { |mob|
+            # echo "comparing " + mob.noun + " to " + critter.to_s
+            mob.noun == critter.to_s
+          }
+          # echo "we have " + targs.size.to_s + " targets"
+          targs.each { |to_kill|
+            # echo "got a hit on " + to_kill.to_s
+            while !(to_kill.status == 'dead' || to_kill.status == 'gone') do
+              # echo "mob has status " + to_kill.status.to_s
+              multifput "stanc off", "kill ##{to_kill.id}"
+              waitrt?
+              # break if GameObj.targets.size > 3 # stop swinging if too many mobs
+              # is the mob dead? or gone if so kill the next else we need to keep swinging
+            end
+          }
+        end
+
+        multifput "stanc off", "kill"
+        # we could also test for "You currently have no valid target. You will need to specify one."
+        #sleep 1
+        waitrt?
+
+        break if GameObj.targets.size == 0
+      end
+  end
+
+  def CleanExit
+    waitrt?
+    fput "stanc defen"
+    start_script "eloot"
+    wait_while { running? ("eloot") }
+    echo "fin-kill exiting"
+  end
+
+end
+
+FinKill.CheckSafeRoom
+FinKill.KillLoop
+FinKill.CleanExit
