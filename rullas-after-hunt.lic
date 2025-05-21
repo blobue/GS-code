@@ -1,0 +1,40 @@
+=begin
+
+rul-after-hunt.lic
+simple script to rest after battle for Rullas
+
+7/3/2020
+Brian LoBue
+=end
+
+echo "resting Rullas after battle"
+pause 3
+
+fput "stow all"
+
+kill_script "iSigils"
+kill_script "stand"
+kill_script "disarmwatch"
+
+multifput "get armoire from my backpack", "open my armoire"
+pause 1
+multifput "close my armoire", "put armoire in my backpack"
+
+pause 2
+
+start_script("go2", [ "1932" , '_disable_confirm_' ])
+wait_while { running?("go2")}
+
+start_script("useherbs", [ "in bin --mending=on --buy=off" ])
+wait_while { running? ("useherbs" ) }
+
+start_script("useherbs", [ "on bench --mending=on" ])
+wait_while { running?("useherbs") }
+
+start_script("eloot", ["sell"])
+wait_while { running?("eloot") }
+
+fput "info"
+fput "exp"
+
+echo "ready to rest"

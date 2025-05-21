@@ -1,0 +1,33 @@
+=begin
+
+fin-prep-hunt.lic
+simple script to prepare rullas for battle
+
+7/3/2020
+Brian LoBue
+=end
+
+echo "preparing Rullas for battle"
+pause 3
+
+fput "stow all"
+
+start_scripts "iSigils", "stand", "disarmwatch"
+
+pause 2
+
+fput "get armoire from my backpack"
+pause 0.5
+fput "open my armoire"
+pause 0.5
+fput "put armoire in my backpack"
+
+fput "info"
+fput "exp"
+
+fput "get maul from my backp"
+
+fput "glance"
+
+echo "ready to go!"
+

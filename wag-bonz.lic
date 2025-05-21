@@ -1,0 +1,46 @@
+=begin
+
+wag-bonz.lic
+
+spell up the dog
+
+05-2025 Brian LoBue
+=end
+
+to_be_dropped = [ "101", "103", "107", "602", "618" ]
+
+fput "release"
+pause 1
+
+to_be_dropped.each do |snum|
+  waitrt?
+  fput "prep " + snum.to_s
+  pause 1
+  waitrt?
+  fput "cast dobrem"
+  waitrt?
+end
+
+=begin
+waitrt?
+fput "stop spell 104"
+pause 1
+waitrt?
+fput "stop spell 105"
+pause 1
+waitrt?
+fput "stop spell 112"
+pause 1
+waitrt?
+fput "stop spell 207"
+pause 1
+waitrt?
+fput "stop spell 1204"
+pause 1
+waitrt?
+fput "stop spell 1208"
+=end
+
+echo "dobrem spelled up"
+
+# super inelegant now, switch to list later on

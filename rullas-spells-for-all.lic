@@ -1,0 +1,35 @@
+=begin
+ 
+ rullas-spells-for-all.lic
+
+ rullas helps out
+
+=end
+
+echo 'starting Rullas spellup cycle'
+
+pause 3
+waitrt?
+
+fput "incant 601"
+pause 1
+waitrt?
+
+start_script "waggle" , [ "laviticas" ]
+pause 3
+waitrt?
+
+wait_while { running? "waggle" }
+pause 1
+waitrt?
+
+start_script "waggle", [ "fingrimbal" ]
+pause 3
+waitrt?
+
+wait_while { running? "waggle" }
+pause 1
+waitrt?
+
+fput 'whisper fing all done with spellups'
+echo 'Rullas done spelling up friends'

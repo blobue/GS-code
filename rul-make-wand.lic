@@ -1,0 +1,66 @@
+=begin
+
+simple script to get a stick and make a wand/rod for the ranger
+
+5/2025 Brian LoBue
+
+=end
+
+module RulMakeWand
+  extend self
+  
+  def Setup
+    fput "stow all"
+    fput "get case from my satch"
+    fput "get stick from my satch"
+  end
+
+  def CastAtStick
+    waitrt?
+    fput "prep 614" if mana(14)
+    fput "cast at my stick" if mana(14)
+    waitrt?
+  end
+
+  def MakeImbed
+    self.CastAtStick
+    waitrt?
+    result = get
+  
+    loop do
+      #echo "checking line: " + result
+      if result =~ /You feel the process has not been finished/
+        #cast at stick again
+        echo "need to cast again at stick"
+        self.CastAtStick
+        result = get
+        echo "checking line: " + result
+      end
+      if result =~ /Spell Hinderance/
+        echo "spell hinderance so we need to cast again"
+        waitrt?
+        self.CastAtStick
+        result = get
+      end
+      if result =~ /you feel the stick has changed somehow/
+        break
+      end
+      result = get #no match try next line
+    end
+    imbed = checkleft
+    echo "imbed is now: " + imbed.to_s
+    fput "put " + imbed.to_s + " in my case"
+    pause 1
+    fput "rub my case"
+    pause 1
+    fput "get " + imbed.to_s + " from my case"
+    pause 1
+    fput "put " + imbed.to_s + " in my satchel"
+    fput "put case in my satchel"
+    echo "we should be done now"
+  end
+end
+
+RulMakeWand.Setup
+RulMakeWand.MakeImbed
+
